@@ -8,20 +8,8 @@ services:
     envVars:
       - key: SECRET_KEY
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: opportunity-engine-db
-          property: connectionString
-
-  # Runs the scraper/update agent on a schedule. Free tier supports cron jobs
-  # with limited monthly runtime - check current Render limits.
-  - type: cron
-    name: opportunity-engine-updater
-    env: python
-    schedule: "0 */6 * * *"
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python -m app.scrapers.update_agent"
-    envVars:
+      - key: UPDATE_SECRET_KEY
+        generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: opportunity-engine-db

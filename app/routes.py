@@ -1,7 +1,85 @@
-from flask import Blueprint, render_template, Response, request
+import os
+from flask import Blueprint, render_template, Response, request, jsonify
+from app import db
 from app.models import Job, Scholarship
 
 main_bp = Blueprint("main", __name__)
+
+
+def _check_key():
+    expected_key = os.environ.get("UPDATE_SECRET_KEY")
+    provided_key = request.args.get("key") or (request.json or {}).get("key") if request.is_json else request.args.get("key")
+    return expected_key and provided_key == expected_key
+
+
+@main_bp.route("/admin/ingest", methods=["POST"])
+def ingest():
+    """
+    Accepts scraped listings from a LOCAL scraper (e.g. running on your own
+    machine with full internet access) and upserts them into the hosted DB.
+    Use this when the host itself has restricted outbound internet (e.g.
+    PythonAnywhere free tier).
+
+    POST JSON body:
+    {
+        "key": "YOUR_SECRET",
+        "jobs": [ {external_id, title, company, ...}, ... ],
+        "scholarships": [ {external_id, title, provider, ...}, ... ]
+    }
+    """
+    expected_key = os.environ.get("UPDATE_SECRET_KEY")
+    payload = request.get_json(silent=True) or {}
+    if not expected_key or payload.get("key") != expected_key:
+        return jsonify({"error": "unauthorized"}), 403
+
+    new_jobs, new_scholarships = 0, 0
+
+    for item in payload.get("jobs", []):
+        existing = Job.query.filter_by(external_id=item["external_id"]).first()
+        if existing:
+            existing.is_active = True
+            continue
+        db.session.add(Job(**{k: v for k, v in item.items() if hasattr(Job, k)}))
+        new_jobs += 1
+
+    for item in payload.get("scholarships", []):
+        existing = Scholarship.query.filter_by(external_id=item["external_id"]).first()
+        if existing:
+            existing.is_active = True
+            continue
+        db.session.add(Scholarship(**{k: v for k, v in item.items() if hasattr(Scholarship, k)}))
+        new_scholarships += 1
+
+    db.session.commit()
+    return jsonify({"status": "ok", "new_jobs": new_jobs, "new_scholarships": new_scholarships})
+
+
+@main_bp.route("/admin/run-update")
+def run_update():
+    """
+    Triggers a LOCAL (in-process) scrape + refresh. Only works if the host
+    itself has open outbound internet access (e.g. Render). If your host
+    restricts outbound calls (e.g. PythonAnywhere free tier), use the
+    /admin/ingest endpoint instead, fed by scripts/local_push.py running on
+    your own machine.
+    """
+    expected_key = os.environ.get("UPDATE_SECRET_KEY")
+    provided_key = request.args.get("key")
+
+    if not expected_key or provided_key != expected_key:
+        return jsonify({"error": "unauthorized"}), 403
+
+    from app.scrapers.update_agent import update_jobs, update_scholarships, notify_telegram
+
+    new_jobs, _ = update_jobs()
+    new_scholarships, _ = update_scholarships()
+    notify_telegram(new_jobs, new_scholarships)
+
+    return jsonify({
+        "status": "ok",
+        "new_jobs": new_jobs,
+        "new_scholarships": new_scholarships,
+    })
 
 
 @main_bp.route("/")
