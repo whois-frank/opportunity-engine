@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Opportunity Feed — Latest Jobs & Scholarships{% endblock %}</title>
+    <meta name="description" content="{% block description %}Fresh remote jobs and scholarships, updated automatically, no fluff.{% endblock %}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- AdSense: replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID once approved -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+</head>
+<body>
+    <header class="site-header">
+        <a href="{{ url_for('main.home') }}" class="logo">Opportunity Feed</a>
+        <nav>
+            <a href="{{ url_for('main.jobs') }}">Jobs</a>
+            <a href="{{ url_for('main.scholarships') }}">Scholarships</a>
+        </nav>
+    </header>
+
+    <!-- Top ad slot: small, unobtrusive -->
+    <div class="ad-slot ad-slot-top">
+        <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="TOP_SLOT_ID" data-ad-format="auto"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom ad slot -->
+    <div class="ad-slot ad-slot-bottom">
+        <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="BOTTOM_SLOT_ID" data-ad-format="auto"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+    </div>
+
+    <footer>
+        <p>&copy; {{ 2026 }} Opportunity Feed. Listings sourced from public job boards and RSS feeds.</p>
+    </footer>
+</body>
+</html>

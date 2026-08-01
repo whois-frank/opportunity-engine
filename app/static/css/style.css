@@ -1,0 +1,88 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.5;
+}
+a { color: #2563eb; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border-bottom: 1px solid #eaeaea;
+}
+.logo { font-weight: 700; font-size: 1.2rem; color: #1a1a1a; }
+nav a { margin-left: 1.2rem; color: #444; font-weight: 500; }
+
+main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+
+.hero { text-align: center; padding: 2rem 1rem; }
+.hero h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.hero p { color: #666; }
+
+section { margin: 2rem 0; }
+section h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+.card {
+    display: block;
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #1a1a1a;
+}
+.card:hover { border-color: #2563eb; text-decoration: none; }
+.card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+.meta { color: #777; font-size: 0.85rem; }
+.salary { color: #16a34a; font-weight: 600; font-size: 0.85rem; margin-top: 0.3rem; }
+
+.see-all { display: inline-block; margin-top: 1rem; font-weight: 600; }
+
+.search-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.search-form input { flex: 1; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; }
+.search-form button { padding: 0.6rem 1.2rem; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
+
+.listing-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.listing-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #1a1a1a;
+}
+.listing-row:hover { border-color: #2563eb; text-decoration: none; }
+
+.pagination { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; align-items: center; }
+
+.detail h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+.detail .description { margin: 1.5rem 0; white-space: pre-wrap; }
+.apply-btn {
+    display: inline-block;
+    background: #2563eb;
+    color: #fff;
+    padding: 0.7rem 1.3rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+.apply-btn:hover { text-decoration: none; opacity: 0.9; }
+.source-note { color: #999; font-size: 0.8rem; margin-top: 0.8rem; }
+
+/* Ad slots: kept visually quiet, boxed subtly so they don't dominate the page */
+.ad-slot { max-width: 900px; margin: 1.5rem auto; text-align: center; min-height: 0; }
+.ad-slot-top, .ad-slot-bottom { padding: 0 1.5rem; }
+
+footer { text-align: center; padding: 2rem 1rem; color: #999; font-size: 0.8rem; }

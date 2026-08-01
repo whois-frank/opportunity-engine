@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Scholarships — Opportunity Feed{% endblock %}
+{% block content %}
+<h1>Scholarships</h1>
+<form method="get" class="search-form">
+    <input type="text" name="q" placeholder="Search scholarships..." value="{{ q }}">
+    <button type="submit">Search</button>
+</form>
+
+<div class="listing-list">
+    {% for sch in pagination.items %}
+    <a class="listing-row" href="{{ url_for('main.scholarship_detail', sid=sch.id) }}">
+        <div>
+            <h3>{{ sch.title }}</h3>
+            <p class="meta">{{ sch.provider }}{% if sch.deadline %} &middot; Deadline: {{ sch.deadline }}{% endif %}</p>
+        </div>
+    </a>
+    {% else %}
+    <p>No scholarships found.</p>
+    {% endfor %}
+</div>
+
+<div class="pagination">
+    {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}&q={{ q }}">← Prev</a>{% endif %}
+    <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}&q={{ q }}">Next →</a>{% endif %}
+</div>
+{% endblock %}

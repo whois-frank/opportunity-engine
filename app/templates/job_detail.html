@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} at {{ job.company }} — Opportunity Feed{% endblock %}
+{% block description %}{{ job.title }} at {{ job.company }}, {{ job.location }}{% endblock %}
+{% block content %}
+<article class="detail">
+    <h1>{{ job.title }}</h1>
+    <p class="meta">{{ job.company }} &middot; {{ job.location }} {% if job.is_remote %}&middot; Remote{% endif %}</p>
+    {% if job.salary %}<p class="salary">{{ job.salary }}</p>{% endif %}
+
+    <div class="ad-slot ad-slot-in-content">
+        <!-- ad slot -->
+    </div>
+
+    <div class="description">{{ job.description | safe }}</div>
+
+    <a class="apply-btn" href="{{ job.url }}" target="_blank" rel="noopener nofollow">Apply / View original listing →</a>
+    <p class="source-note">Source: {{ job.source }}</p>
+</article>
+{% endblock %}

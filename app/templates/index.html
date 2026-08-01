@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>Fresh opportunities, updated automatically</h1>
+    <p>Remote jobs and scholarships, scraped and refreshed around the clock.</p>
+</section>
+
+<section>
+    <h2>Latest Jobs</h2>
+    <div class="card-grid">
+        {% for job in jobs %}
+        <a class="card" href="{{ url_for('main.job_detail', job_id=job.id) }}">
+            <h3>{{ job.title }}</h3>
+            <p class="meta">{{ job.company }} &middot; {{ job.location }}</p>
+            {% if job.salary %}<p class="salary">{{ job.salary }}</p>{% endif %}
+        </a>
+        {% else %}
+        <p>No jobs yet — run the update agent to populate listings.</p>
+        {% endfor %}
+    </div>
+    <a class="see-all" href="{{ url_for('main.jobs') }}">See all jobs →</a>
+</section>
+
+<!-- In-content ad slot: sits naturally between sections -->
+<div class="ad-slot ad-slot-in-content">
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="IN_CONTENT_SLOT_ID" data-ad-format="auto"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+</div>
+
+<section>
+    <h2>Latest Scholarships</h2>
+    <div class="card-grid">
+        {% for sch in scholarships %}
+        <a class="card" href="{{ url_for('main.scholarship_detail', sid=sch.id) }}">
+            <h3>{{ sch.title }}</h3>
+            <p class="meta">{{ sch.provider }}</p>
+        </a>
+        {% else %}
+        <p>No scholarships yet — run the update agent to populate listings.</p>
+        {% endfor %}
+    </div>
+    <a class="see-all" href="{{ url_for('main.scholarships') }}">See all scholarships →</a>
+</section>
+{% endblock %}

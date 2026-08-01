@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Jobs — Opportunity Feed{% endblock %}
+{% block content %}
+<h1>Jobs</h1>
+<form method="get" class="search-form">
+    <input type="text" name="q" placeholder="Search job titles..." value="{{ q }}">
+    <button type="submit">Search</button>
+</form>
+
+<div class="listing-list">
+    {% for job in pagination.items %}
+    <a class="listing-row" href="{{ url_for('main.job_detail', job_id=job.id) }}">
+        <div>
+            <h3>{{ job.title }}</h3>
+            <p class="meta">{{ job.company }} &middot; {{ job.location }} {% if job.is_remote %}&middot; Remote{% endif %}</p>
+        </div>
+        {% if job.salary %}<span class="salary">{{ job.salary }}</span>{% endif %}
+    </a>
+    {% else %}
+    <p>No jobs found.</p>
+    {% endfor %}
+</div>
+
+<div class="pagination">
+    {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}&q={{ q }}">← Prev</a>{% endif %}
+    <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}&q={{ q }}">Next →</a>{% endif %}
+</div>
+{% endblock %}

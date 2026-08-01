@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ sch.title }} — Opportunity Feed{% endblock %}
+{% block content %}
+<article class="detail">
+    <h1>{{ sch.title }}</h1>
+    <p class="meta">{{ sch.provider }}{% if sch.deadline %} &middot; Deadline: {{ sch.deadline }}{% endif %}</p>
+
+    <div class="ad-slot ad-slot-in-content">
+        <!-- ad slot -->
+    </div>
+
+    <div class="description">{{ sch.description | safe }}</div>
+
+    <a class="apply-btn" href="{{ sch.url }}" target="_blank" rel="noopener nofollow">View original listing →</a>
+    <p class="source-note">Source: {{ sch.source }}</p>
+</article>
+{% endblock %}
