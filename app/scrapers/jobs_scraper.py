@@ -13,6 +13,22 @@ def _make_external_id(site, url):
     return hashlib.sha256(f"{site}:{url}".encode()).hexdigest()[:32]
 
 
+def _safe_str(value, default=""):
+    """JobSpy/pandas returns missing fields as NaN (a float), not None or
+    empty string. Slicing or calling string methods on NaN crashes with
+    confusing errors like 'float object is not subscriptable'. This
+    normalizes any missing/NaN value to a safe default string."""
+    if value is None:
+        return default
+    try:
+        import pandas as pd
+        if pd.isna(value):
+            return default
+    except (TypeError, ValueError):
+        pass
+    return str(value)
+
+
 def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=40, sites=None):
     """
     Returns a list of normalized job dicts:
@@ -32,30 +48,44 @@ def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=40, sit
 
     jobs = []
     for _, row in df.iterrows():
-        url = row.get("job_url") or ""
+        url = _safe_str(row.get("job_url"))
         if not url:
             continue
-        site = row.get("site", "unknown")
+        site = _safe_str(row.get("site"), "unknown")
+        location_str = _safe_str(row.get("location"))
         jobs.append({
             "external_id": _make_external_id(site, url),
-            "title": row.get("title") or "Untitled role",
-            "company": row.get("company") or "Unknown",
-            "location": row.get("location") or "",
-            "is_remote": bool(row.get("is_remote")) if "is_remote" in row else "remote" in (row.get("location") or "").lower(),
+            "title": _safe_str(row.get("title"), "Untitled role"),
+            "company": _safe_str(row.get("company"), "Unknown"),
+            "location": location_str,
+            "is_remote": bool(row.get("is_remote")) if not _is_missing(row.get("is_remote")) else "remote" in location_str.lower(),
             "salary": _format_salary(row),
             "source": site,
             "url": url,
-            "description": (row.get("description") or "")[:5000],
-            "date_posted": row.get("date_posted") if row.get("date_posted") else datetime.utcnow(),
+            "description": _safe_str(row.get("description"))[:5000],
+            "date_posted": row.get("date_posted") if not _is_missing(row.get("date_posted")) else datetime.utcnow(),
         })
     return jobs
 
 
+def _is_missing(value):
+    if value is None:
+        return True
+    try:
+        import pandas as pd
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
 def _format_salary(row):
     lo, hi = row.get("min_amount"), row.get("max_amount")
-    if lo and hi:
-        return f"{int(lo):,} - {int(hi):,} {row.get('currency', '')}".strip()
-    return None
+    if _is_missing(lo) or _is_missing(hi):
+        return None
+    try:
+        return f"{int(lo):,} - {int(hi):,} {_safe_str(row.get('currency'))}".strip()
+    except (TypeError, ValueError):
+        return None
 
 
 if __name__ == "__main__":
