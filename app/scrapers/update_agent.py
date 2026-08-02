@@ -22,52 +22,67 @@ from app.scrapers.scholarship_scraper import scrape_scholarships
 
 
 def update_jobs():
-    print(f"[{datetime.utcnow()}] Scraping jobs (multiple search queries)...")
+    from app.scrapers.jobs_scraper import scrape_jobs, SEARCH_QUERIES
 
-    from app.scrapers.jobs_scraper import scrape_jobs_multi
+    # Run only ONE query per invocation, rotating through the list based on
+    # time. Running all queries in a single request took long enough to hit
+    # Render's platform-level request timeout (separate from gunicorn's own
+    # --timeout setting), which corrupted the response. This keeps each run
+    # fast (~30s, the window already proven to work) while still covering
+    # every configured query over the course of a day at a 6-hour schedule.
+    ROTATION_WINDOW_SECONDS = 6 * 3600
+    query_index = int(time.time() // ROTATION_WINDOW_SECONDS) % len(SEARCH_QUERIES)
+    query = SEARCH_QUERIES[query_index]
+
+    print(f"[{datetime.utcnow()}] Scraping jobs (query {query_index + 1}/{len(SEARCH_QUERIES)}: {query})...")
+
+    try:
+        scraped = scrape_jobs(
+            search_term=query["search_term"],
+            location=query["location"],
+            country_indeed=query.get("country_indeed", "Nigeria"),
+        )
+    except Exception as e:
+        print(f"  Job scrape failed: {e}")
+        return 0, 0
+
+    gc.collect()
 
     current_active_count = Job.query.filter_by(is_active=True).count()
 
     seen_ids = set()
     new_count = 0
-    total_scraped = 0
     BATCH_SIZE = 15
+    for i, item in enumerate(scraped, start=1):
+        seen_ids.add(item["external_id"])
+        existing = Job.query.filter_by(external_id=item["external_id"]).first()
+        if existing:
+            existing.is_active = True
+        else:
+            db.session.add(Job(**item))
+            new_count += 1
 
-    try:
-        for query_results in scrape_jobs_multi():
-            total_scraped += len(query_results)
-            for i, item in enumerate(query_results, start=1):
-                seen_ids.add(item["external_id"])
-                existing = Job.query.filter_by(external_id=item["external_id"]).first()
-                if existing:
-                    existing.is_active = True
-                else:
-                    db.session.add(Job(**item))
-                    new_count += 1
+        if i % BATCH_SIZE == 0:
+            db.session.commit()
 
-                if i % BATCH_SIZE == 0:
-                    db.session.commit()
-            db.session.commit()  # flush remainder of this query's batch
-            gc.collect()
-    except Exception as e:
-        print(f"  Job scrape failed partway through: {e}")
-        db.session.commit()  # keep whatever we already got
+    db.session.commit()
 
     # Safety rule: only mark old listings inactive if this scrape found AT
-    # LEAST as many as are currently active. If the scrape came back empty
-    # or partial (site blocked us, network hiccup, cold-start timeout),
-    # keep the existing listings live instead of wiping the site.
+    # LEAST as many as are currently active. Since we now only scrape ONE
+    # query per run (not the full set), this comparison is against results
+    # from a single query - so deactivation is intentionally conservative
+    # here to avoid wiping listings found by OTHER queries in past runs.
     stale_marked = 0
-    if total_scraped >= current_active_count:
+    if len(scraped) >= current_active_count:
         stale = Job.query.filter(~Job.external_id.in_(seen_ids), Job.is_active == True).all() if seen_ids else []
         for j in stale:
             j.is_active = False
         stale_marked = len(stale)
         db.session.commit()
     else:
-        print(f"  Scrape found {total_scraped} jobs total, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
+        print(f"  Scrape found {len(scraped)} jobs, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
 
-    print(f"  {new_count} new jobs added, {stale_marked} marked inactive, {total_scraped} total scraped across all queries.")
+    print(f"  {new_count} new jobs added, {stale_marked} marked inactive.")
     return new_count, stale_marked
 
 

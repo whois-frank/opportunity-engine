@@ -184,7 +184,7 @@ def service_worker():
     """
     content = """self.options = {
     "domain": "3nbf4.com",
-    "zoneId": 11483512
+    "zoneId": 11486461
 }
 self.lary = ""
 importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
