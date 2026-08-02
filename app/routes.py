@@ -176,6 +176,34 @@ def sitemap():
     return Response("\n".join(xml), mimetype="application/xml")
 
 
+@main_bp.route("/sw.js")
+def service_worker():
+    """
+    Ad network (Monetag/PropellerAds) site-ownership verification file.
+    Must be served at the exact root path /sw.js, not under /static/.
+    """
+    content = """self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 11483435
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
+"""
+    return Response(content, mimetype="application/javascript")
+
+
+@main_bp.route("/ads.txt")
+def ads_txt():
+    """
+    Ad network verification file. Add one line per network once you have
+    your publisher ID, e.g.:
+        propellerads.com, PUB_ID_HERE, DIRECT
+    Multiple networks can each have their own line here.
+    """
+    lines = os.environ.get("ADS_TXT_CONTENT", "")
+    return Response(lines, mimetype="text/plain")
+
+
 @main_bp.route("/robots.txt")
 def robots():
     return Response("User-agent: *\nAllow: /\nSitemap: " + request.url_root + "sitemap.xml", mimetype="text/plain")
