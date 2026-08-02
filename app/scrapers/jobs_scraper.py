@@ -29,10 +29,14 @@ def _safe_str(value, default=""):
     return str(value)
 
 
-def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=40, sites=None):
+def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=15, sites=None):
     """
     Returns a list of normalized job dicts:
     {external_id, title, company, location, is_remote, salary, source, url, description, date_posted}
+
+    results_wanted default kept low (15) since JobSpy + pandas can push
+    memory usage past free-tier hosting limits (e.g. Render's 512MB) when
+    scraping multiple sites at once.
     """
     from jobspy import scrape_jobs as jobspy_scrape  # lazy import so app boots without it installed
 
@@ -65,6 +69,8 @@ def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=40, sit
             "description": _safe_str(row.get("description"))[:5000],
             "date_posted": row.get("date_posted") if not _is_missing(row.get("date_posted")) else datetime.utcnow(),
         })
+
+    del df  # free the dataframe explicitly rather than waiting for GC
     return jobs
 
 

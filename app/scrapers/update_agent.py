@@ -12,6 +12,7 @@ automatically (e.g. every 6 hours). It:
 """
 import sys
 import time
+import gc
 from datetime import datetime
 
 from app import create_app, db
@@ -28,18 +29,28 @@ def update_jobs():
         print(f"  Job scrape failed: {e}")
         return 0, 0
 
+    gc.collect()
+
     current_active_count = Job.query.filter_by(is_active=True).count()
 
     seen_ids = set()
     new_count = 0
-    for item in scraped:
+    BATCH_SIZE = 15
+    for i, item in enumerate(scraped, start=1):
         seen_ids.add(item["external_id"])
         existing = Job.query.filter_by(external_id=item["external_id"]).first()
         if existing:
             existing.is_active = True
-            continue
-        db.session.add(Job(**item))
-        new_count += 1
+        else:
+            db.session.add(Job(**item))
+            new_count += 1
+
+        # Commit in small batches rather than holding everything in memory
+        # until the very end - matters on low-RAM free hosting tiers.
+        if i % BATCH_SIZE == 0:
+            db.session.commit()
+
+    db.session.commit()  # flush any remainder
 
     # Safety rule: only mark old listings inactive if this scrape found AT
     # LEAST as many as are currently active. If the scrape came back empty
@@ -51,10 +62,10 @@ def update_jobs():
         for j in stale:
             j.is_active = False
         stale_marked = len(stale)
+        db.session.commit()
     else:
         print(f"  Scrape found {len(scraped)} jobs, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
 
-    db.session.commit()
     print(f"  {new_count} new jobs added, {stale_marked} marked inactive.")
     return new_count, stale_marked
 
