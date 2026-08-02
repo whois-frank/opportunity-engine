@@ -1,7 +1,8 @@
 import os
 from flask import Blueprint, render_template, Response, request, jsonify
 from app import db
-from app.models import Job, Scholarship
+from app import db
+from app.models import Job, Scholarship, PageView
 
 main_bp = Blueprint("main", __name__)
 
@@ -52,6 +53,42 @@ def ingest():
 
     db.session.commit()
     return jsonify({"status": "ok", "new_jobs": new_jobs, "new_scholarships": new_scholarships})
+
+
+@main_bp.route("/admin/stats")
+def stats():
+    expected_key = os.environ.get("UPDATE_SECRET_KEY")
+    provided_key = request.args.get("key")
+    if not expected_key or provided_key != expected_key:
+        return jsonify({"error": "unauthorized"}), 403
+
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = now - timedelta(days=7)
+
+    total_views = PageView.query.count()
+    today_views = PageView.query.filter(PageView.viewed_at >= today_start).count()
+    week_views = PageView.query.filter(PageView.viewed_at >= week_start).count()
+
+    top_pages = (
+        db.session.query(PageView.path, func.count(PageView.id).label("views"))
+        .group_by(PageView.path)
+        .order_by(func.count(PageView.id).desc())
+        .limit(10)
+        .all()
+    )
+
+    return jsonify({
+        "total_views": total_views,
+        "today_views": today_views,
+        "last_7_days_views": week_views,
+        "total_jobs": Job.query.count(),
+        "total_scholarships": Scholarship.query.count(),
+        "top_pages": [{"path": p, "views": v} for p, v in top_pages],
+    })
 
 
 @main_bp.route("/admin/run-update")

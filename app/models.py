@@ -24,6 +24,15 @@ class Job(db.Model):
         return f"<Job {self.title} @ {self.company}>"
 
 
+class PageView(db.Model):
+    __tablename__ = "page_views"
+
+    id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(500))
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    referrer = db.Column(db.String(500))
+
+
 class Scholarship(db.Model):
     __tablename__ = "scholarships"
 

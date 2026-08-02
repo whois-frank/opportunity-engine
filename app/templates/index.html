@@ -10,6 +10,7 @@
     <div class="card-grid">
         {% for job in jobs %}
         <a class="card" href="{{ url_for('main.job_detail', job_id=job.id) }}">
+            <div class="card-icon">💼</div>
             <h3>{{ job.title }}</h3>
             <p class="meta">{{ job.company }} &middot; {{ job.location }}</p>
             {% if job.salary %}<p class="salary">{{ job.salary }}</p>{% endif %}
@@ -32,6 +33,7 @@
     <div class="card-grid">
         {% for sch in scholarships %}
         <a class="card" href="{{ url_for('main.scholarship_detail', sid=sch.id) }}">
+            <div class="card-icon">🎓</div>
             <h3>{{ sch.title }}</h3>
             <p class="meta">{{ sch.provider }}</p>
         </a>

@@ -23,6 +23,20 @@ def create_app():
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 
+    @app.before_request
+    def track_page_view():
+        from flask import request
+        from app.models import PageView
+        # Skip tracking for static assets and admin/API routes
+        path = request.path
+        if path.startswith("/static") or path.startswith("/admin") or path in ("/sitemap.xml", "/robots.txt"):
+            return
+        try:
+            db.session.add(PageView(path=path, referrer=request.referrer))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()  # never let tracking break the actual page
+
     with app.app_context():
         db.create_all()
 

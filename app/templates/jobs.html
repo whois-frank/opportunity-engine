@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Jobs — Opportunity Feed{% endblock %}
+{% block title %}Jobs — Scoutly{% endblock %}
 {% block content %}
 <h1>Jobs</h1>
 <form method="get" class="search-form">
@@ -10,7 +10,8 @@
 <div class="listing-list">
     {% for job in pagination.items %}
     <a class="listing-row" href="{{ url_for('main.job_detail', job_id=job.id) }}">
-        <div>
+        <div class="listing-icon">💼</div>
+        <div class="listing-text">
             <h3>{{ job.title }}</h3>
             <p class="meta">{{ job.company }} &middot; {{ job.location }} {% if job.is_remote %}&middot; Remote{% endif %}</p>
         </div>

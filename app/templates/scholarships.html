@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Scholarships — Opportunity Feed{% endblock %}
+{% block title %}Scholarships — Scoutly{% endblock %}
 {% block content %}
 <h1>Scholarships</h1>
 <form method="get" class="search-form">
@@ -10,7 +10,8 @@
 <div class="listing-list">
     {% for sch in pagination.items %}
     <a class="listing-row" href="{{ url_for('main.scholarship_detail', sid=sch.id) }}">
-        <div>
+        <div class="listing-icon">🎓</div>
+        <div class="listing-text">
             <h3>{{ sch.title }}</h3>
             <p class="meta">{{ sch.provider }}{% if sch.deadline %} &middot; Deadline: {{ sch.deadline }}{% endif %}</p>
         </div>

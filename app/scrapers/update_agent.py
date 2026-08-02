@@ -28,6 +28,8 @@ def update_jobs():
         print(f"  Job scrape failed: {e}")
         return 0, 0
 
+    current_active_count = Job.query.filter_by(is_active=True).count()
+
     seen_ids = set()
     new_count = 0
     for item in scraped:
@@ -39,14 +41,22 @@ def update_jobs():
         db.session.add(Job(**item))
         new_count += 1
 
-    # mark stale listings inactive (not seen in this run, and older than today)
-    stale = Job.query.filter(~Job.external_id.in_(seen_ids)).all() if seen_ids else []
-    for j in stale:
-        j.is_active = False
+    # Safety rule: only mark old listings inactive if this scrape found AT
+    # LEAST as many as are currently active. If the scrape came back empty
+    # or partial (site blocked us, network hiccup, cold-start timeout),
+    # keep the existing listings live instead of wiping the site.
+    stale_marked = 0
+    if len(scraped) >= current_active_count:
+        stale = Job.query.filter(~Job.external_id.in_(seen_ids), Job.is_active == True).all() if seen_ids else []
+        for j in stale:
+            j.is_active = False
+        stale_marked = len(stale)
+    else:
+        print(f"  Scrape found {len(scraped)} jobs, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
 
     db.session.commit()
-    print(f"  {new_count} new jobs added, {len(stale)} marked inactive.")
-    return new_count, len(stale)
+    print(f"  {new_count} new jobs added, {stale_marked} marked inactive.")
+    return new_count, stale_marked
 
 
 def update_scholarships():
@@ -56,6 +66,8 @@ def update_scholarships():
     except Exception as e:
         print(f"  Scholarship scrape failed: {e}")
         return 0, 0
+
+    current_active_count = Scholarship.query.filter_by(is_active=True).count()
 
     seen_ids = set()
     new_count = 0
@@ -68,13 +80,18 @@ def update_scholarships():
         db.session.add(Scholarship(**item))
         new_count += 1
 
-    stale = Scholarship.query.filter(~Scholarship.external_id.in_(seen_ids)).all() if seen_ids else []
-    for s in stale:
-        s.is_active = False
+    stale_marked = 0
+    if len(scraped) >= current_active_count:
+        stale = Scholarship.query.filter(~Scholarship.external_id.in_(seen_ids), Scholarship.is_active == True).all() if seen_ids else []
+        for s in stale:
+            s.is_active = False
+        stale_marked = len(stale)
+    else:
+        print(f"  Scrape found {len(scraped)} scholarships, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
 
     db.session.commit()
-    print(f"  {new_count} new scholarships added, {len(stale)} marked inactive.")
-    return new_count, len(stale)
+    print(f"  {new_count} new scholarships added, {stale_marked} marked inactive.")
+    return new_count, stale_marked
 
 
 def notify_telegram(new_jobs, new_scholarships):

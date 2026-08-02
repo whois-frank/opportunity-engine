@@ -3,16 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Opportunity Feed — Latest Jobs & Scholarships{% endblock %}</title>
+    <title>{% block title %}Scoutly — Latest Jobs & Scholarships{% endblock %}</title>
     <meta name="description" content="{% block description %}Fresh remote jobs and scholarships, updated automatically, no fluff.{% endblock %}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <!-- AdSense: replace ca-pub-XXXXXXXXXXXXXXXX with your real publisher ID once approved -->
     <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <!-- Google Analytics: replace G-XXXXXXXXXX with your real GA4 Measurement ID -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    -->
 </head>
 <body>
     <header class="site-header">
-        <a href="{{ url_for('main.home') }}" class="logo">Opportunity Feed</a>
+        <a href="{{ url_for('main.home') }}" class="logo">Scoutly</a>
         <nav>
             <a href="{{ url_for('main.jobs') }}">Jobs</a>
             <a href="{{ url_for('main.scholarships') }}">Scholarships</a>
@@ -36,7 +47,7 @@
     </div>
 
     <footer>
-        <p>&copy; {{ 2026 }} Opportunity Feed. Listings sourced from public job boards and RSS feeds.</p>
+        <p>&copy; {{ 2026 }} Scoutly. Listings sourced from public job boards and RSS feeds.</p>
     </footer>
 </body>
 </html>
