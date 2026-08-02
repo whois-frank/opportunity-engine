@@ -7,6 +7,19 @@
     <meta name="description" content="{% block description %}Fresh remote jobs and scholarships, updated automatically, no fluff.{% endblock %}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}Scoutly — Latest Jobs & Scholarships{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Fresh remote jobs and scholarships, updated automatically, no fluff.{% endblock %}">
+    <meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='og-image.png') }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Scoutly — Latest Jobs & Scholarships{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Fresh remote jobs and scholarships, updated automatically.{% endblock %}">
+    <meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='og-image.png') }}">
+
     <!-- Monetag: In-Page Push (Banner) -->
     <script>(function(s){s.dataset.zone='11486454',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 

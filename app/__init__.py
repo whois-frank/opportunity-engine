@@ -23,6 +23,11 @@ def create_app():
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 
+    @app.errorhandler(404)
+    def not_found(e):
+        from flask import render_template
+        return render_template("404.html"), 404
+
     @app.before_request
     def track_page_view():
         from flask import request

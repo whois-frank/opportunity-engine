@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — Scoutly{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="card-icon" style="margin: 0 auto 1.2rem; width: 64px; height: 64px; font-size: 2rem;">🔍</div>
+    <h1>Page not found</h1>
+    <p>That listing may have expired or the link's incorrect. Let's get you back on track.</p>
+    <p style="margin-top: 1.5rem;">
+        <a class="see-all" href="{{ url_for('main.home') }}">← Back to homepage</a>
+        &nbsp;&nbsp;
+        <a class="see-all" href="{{ url_for('main.jobs') }}">Browse all jobs →</a>
+    </p>
+</section>
+{% endblock %}
