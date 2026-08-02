@@ -8,6 +8,16 @@ Install: pip install python-jobspy
 import hashlib
 from datetime import datetime
 
+# Expand coverage by searching multiple terms/locations instead of just one.
+# Kept intentionally short (not dozens of combos) since each query re-runs
+# scraping across all 4 job sites - more queries = more time + memory per run.
+SEARCH_QUERIES = [
+    {"search_term": "remote", "location": "Nigeria"},
+    {"search_term": "developer", "location": "Nigeria"},
+    {"search_term": "customer service", "location": "Nigeria"},
+    {"search_term": "remote", "location": "Lagos"},
+]
+
 
 def _make_external_id(site, url):
     return hashlib.sha256(f"{site}:{url}".encode()).hexdigest()[:32]
@@ -72,6 +82,26 @@ def scrape_jobs(search_term="remote", location="Nigeria", results_wanted=15, sit
 
     del df  # free the dataframe explicitly rather than waiting for GC
     return jobs
+
+
+def scrape_jobs_multi(queries=None):
+    """
+    Runs multiple search queries one at a time, YIELDING results after each
+    query completes rather than collecting everything into one big list.
+    This lets the caller commit each batch to the DB and free memory before
+    the next query starts scraping - important on low-RAM free hosting.
+    """
+    import gc
+
+    queries = queries or SEARCH_QUERIES
+    for q in queries:
+        try:
+            results = scrape_jobs(search_term=q["search_term"], location=q["location"])
+        except Exception as e:
+            print(f"  Query {q} failed: {e}")
+            results = []
+        yield results
+        gc.collect()
 
 
 def _is_missing(value):

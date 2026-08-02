@@ -22,51 +22,52 @@ from app.scrapers.scholarship_scraper import scrape_scholarships
 
 
 def update_jobs():
-    print(f"[{datetime.utcnow()}] Scraping jobs...")
-    try:
-        scraped = scrape_jobs()
-    except Exception as e:
-        print(f"  Job scrape failed: {e}")
-        return 0, 0
+    print(f"[{datetime.utcnow()}] Scraping jobs (multiple search queries)...")
 
-    gc.collect()
+    from app.scrapers.jobs_scraper import scrape_jobs_multi
 
     current_active_count = Job.query.filter_by(is_active=True).count()
 
     seen_ids = set()
     new_count = 0
+    total_scraped = 0
     BATCH_SIZE = 15
-    for i, item in enumerate(scraped, start=1):
-        seen_ids.add(item["external_id"])
-        existing = Job.query.filter_by(external_id=item["external_id"]).first()
-        if existing:
-            existing.is_active = True
-        else:
-            db.session.add(Job(**item))
-            new_count += 1
 
-        # Commit in small batches rather than holding everything in memory
-        # until the very end - matters on low-RAM free hosting tiers.
-        if i % BATCH_SIZE == 0:
-            db.session.commit()
+    try:
+        for query_results in scrape_jobs_multi():
+            total_scraped += len(query_results)
+            for i, item in enumerate(query_results, start=1):
+                seen_ids.add(item["external_id"])
+                existing = Job.query.filter_by(external_id=item["external_id"]).first()
+                if existing:
+                    existing.is_active = True
+                else:
+                    db.session.add(Job(**item))
+                    new_count += 1
 
-    db.session.commit()  # flush any remainder
+                if i % BATCH_SIZE == 0:
+                    db.session.commit()
+            db.session.commit()  # flush remainder of this query's batch
+            gc.collect()
+    except Exception as e:
+        print(f"  Job scrape failed partway through: {e}")
+        db.session.commit()  # keep whatever we already got
 
     # Safety rule: only mark old listings inactive if this scrape found AT
     # LEAST as many as are currently active. If the scrape came back empty
     # or partial (site blocked us, network hiccup, cold-start timeout),
     # keep the existing listings live instead of wiping the site.
     stale_marked = 0
-    if len(scraped) >= current_active_count:
+    if total_scraped >= current_active_count:
         stale = Job.query.filter(~Job.external_id.in_(seen_ids), Job.is_active == True).all() if seen_ids else []
         for j in stale:
             j.is_active = False
         stale_marked = len(stale)
         db.session.commit()
     else:
-        print(f"  Scrape found {len(scraped)} jobs, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
+        print(f"  Scrape found {total_scraped} jobs total, fewer than {current_active_count} currently active — keeping existing listings live, skipping deactivation.")
 
-    print(f"  {new_count} new jobs added, {stale_marked} marked inactive.")
+    print(f"  {new_count} new jobs added, {stale_marked} marked inactive, {total_scraped} total scraped across all queries.")
     return new_count, stale_marked
 
 
