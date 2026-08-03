@@ -176,6 +176,12 @@ def sitemap():
     return Response("\n".join(xml), mimetype="application/xml")
 
 
+@main_bp.route("/google6a9b24a2e52c3fe8.html")
+def google_verification():
+    """Google Search Console site-ownership verification file."""
+    return Response("google-site-verification: google6a9b24a2e52c3fe8.html", mimetype="text/html")
+
+
 @main_bp.route("/sw.js")
 def service_worker():
     """
